@@ -1,13 +1,8 @@
 package donson.common
 
 import java.text.SimpleDateFormat
-import java.util.{UUID, Date}
+import java.util.Date
 
-import com.donson.hbase.DsHbaseUtils
-import org.apache.hadoop.hbase.{TableName, HBaseConfiguration}
-import org.apache.hadoop.hbase.client.{HConnectionManager, HTable, Get}
-import org.apache.hadoop.hbase.mapreduce.TableInputFormat
-import org.apache.spark.SparkContext
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 
@@ -15,14 +10,14 @@ import scala.io.Source
 import scala.util.parsing.json.JSON
 
 /**
- * Created by Jiawei on 15/9/15.
+ * Created by lomark on 15/9/15.
  */
 object ReportUtils {
 
   /**
    * 获取广告主的利润率
    */
-  private[common] val requestURL: String = null
+  var requestURL: String = null
 
   /**
    * 生成格式文件名称
@@ -91,11 +86,52 @@ object ReportUtils {
       val cnyWinPrice = prop(45).trim
 
       Row(
-        sessionID, advertisersID, adOrderID, adCreativeID, adPlatformProviderID, SDKVersionNumber, adPlatformKey,
-        putInModelType, requestMode, adPrice, adPPPrice, requestDate, ip, appID, appName, uuid, device, client,
-        osVersion, density, pw, ph, long, lat, provinceName, cityName, isPID, isPName,networkMannerID, networkMannerName,
-        isEffective, isBilling, adSpaceType, adSpaceTypeName, deviceType, processNode, appType, district, payMode, isBid,
-        bidPrice, winPrice,isWin, cur, rate, cnyWinPrice,
+        sessionID,
+        advertisersID,
+        adOrderID,
+        adCreativeID,
+        adPlatformProviderID,
+        SDKVersionNumber,
+        adPlatformKey,
+        putInModelType,
+        requestMode,
+        adPrice,
+        adPPPrice,
+        requestDate,
+        ip,
+        appID,
+        appName,
+        uuid,
+        device,
+        client,
+        osVersion,
+        density,
+        pw,
+        ph,
+        long,
+        lat,
+        provinceName,
+        cityName,
+        isPID,
+        isPName,
+        networkMannerID,
+        networkMannerName,
+        isEffective,
+        isBilling,
+        adSpaceType,
+        adSpaceTypeName,
+        deviceType,
+        processNode,
+        appType,
+        district,
+        payMode,
+        isBid,
+        bidPrice,
+        winPrice,
+        isWin,
+        cur,
+        rate,
+        cnyWinPrice,
 
         // 展示量
         if (!requestMode.isEmpty && requestMode.toInt == 2 && isEffective.equals("1")) 1 else 0,
@@ -121,28 +157,38 @@ object ReportUtils {
         // 曝光受众
         if (!requestMode.isEmpty && !isEffective.isEmpty && requestMode.equals("2") && isEffective.equals("1")) 1 else 0,
         // 点击受众
-        if (!requestMode.isEmpty && !isEffective.isEmpty && requestMode.equals("3") && isEffective.equals("1")) 1 else 0,
+        if (!requestMode.isEmpty
+          && !isEffective.isEmpty
+          && requestMode.equals("3")
+          && isEffective.equals("1")) 1 else 0,
+
         // 消费
-        if (!adPlatformProviderID.isEmpty && !adOrderID.isEmpty &&  !adCreativeID.isEmpty &&
-          adPlatformProviderID.toInt >= 100000 &&  adOrderID.toInt > 200000 && adCreativeID.toInt > 200000  &&
-          isEffective.equals("1")  && isBilling.equals("1") && isBid.equals("1")) loadAdvertisersPriceMap(advertisersID, winPrice.toDouble) else 0.0,
+        if (!adPlatformProviderID.isEmpty
+          && !adOrderID.isEmpty
+          && !adCreativeID.isEmpty
+          && adPlatformProviderID.toInt >= 100000
+          && adOrderID.toInt > 200000
+          && adCreativeID.toInt > 200000
+          && isEffective.equals("1")
+          && isBilling.equals("1")
+          && isBid.equals("1")) loadAdvertisersPriceMap(advertisersID, winPrice.toDouble) else 0.0,
 
         // 成本
         if (!adPlatformProviderID.isEmpty && !adOrderID.isEmpty &&  !adCreativeID.isEmpty &&
-          adPlatformProviderID.toInt >= 100000 &&  adOrderID.toInt > 200000 && adCreativeID.toInt > 200000  &&
-          isEffective.equals("1")  && isBilling.equals("1") && isBid.equals("1")) winPrice.toDouble / 1000 else 0.0,
-      if (DSHbaseUtils.rowKeyIsExist(false,advertisersID, adOrderID, adCreativeID, uuid)) 0
-      else  {
-        DSHbaseUtils.write2Hbase(false,advertisersID,adOrderID,adCreativeID,uuid)
-        1
-      }
-      ,
+            adPlatformProviderID.toInt >= 100000 &&  adOrderID.toInt > 200000 && adCreativeID.toInt > 200000  &&
+            isEffective.equals("1")  && isBilling.equals("1") && isBid.equals("1")) winPrice.toDouble / 1000 else 0.0,
 
-      if(DSHbaseUtils.rowKeyIsExist(true,advertisersID, adOrderID, adCreativeID,uuid)) 0
-      else {
-        DSHbaseUtils.write2Hbase(true, advertisersID, adOrderID, adCreativeID, uuid)
-        1
-      }
+        if (DSHbaseUtils.rowKeyIsExist(false,advertisersID, adOrderID, adCreativeID, uuid)) 0
+        else  {
+          DSHbaseUtils.write2Hbase(false,advertisersID,adOrderID,adCreativeID,uuid)
+          1
+        },
+
+        if (DSHbaseUtils.rowKeyIsExist(true,advertisersID, adOrderID, adCreativeID,uuid)) 0
+        else {
+          DSHbaseUtils.write2Hbase(true, advertisersID, adOrderID, adCreativeID, uuid)
+          1
+        }
       )
     }
   }
@@ -254,5 +300,6 @@ object ReportUtils {
       "FROM adloginfo " +
       "group by AdvertisersID,ADOrderID,ADCreativeID,ReqDate,ReqHour"
   }
+
 
 }
