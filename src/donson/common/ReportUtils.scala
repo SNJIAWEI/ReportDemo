@@ -241,8 +241,6 @@ object ReportUtils {
    * 报表demo
    */
   def DSP_AssHourlyDetailDataReport = {
-
-//    val uuid = UUID.randomUUID().toString.replaceAll("-","") // '$uuid',
     s"SELECT AdvertisersID, ADOrderID, ADCreativeID, ReqDate, ReqHour," +
       "sum(IsShow) IsShowSum, " +
       "sum(IsClick) IsClickSum, " +
