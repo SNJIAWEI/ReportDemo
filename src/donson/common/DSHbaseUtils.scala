@@ -5,7 +5,9 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{HBaseConfiguration, HColumnDescriptor, HTableDescriptor, TableName}
 
 /**
- * Created by Administrator on 2015/9/18 0018.
+ * Created by lomark on 2015/9/18 0018.
+ * 处理用户UUID
+ * RowKey 格式: "ASS" + "Click" + AdvertisersID + ADOrderID + ADCreativeID + uuid
  */
 object DSHbaseUtils extends Serializable {
 
@@ -14,24 +16,13 @@ object DSHbaseUtils extends Serializable {
   val cName = ""
   val cValue = ""
 
-  //  val sparkConf = new SparkConf("masterurl","HbaseTest",System.getenv("SPARK_HOME"),SparkContext.jarOfClass(this.getClass))
-
-  //  val sparkConf = new SparkConf("masterurl","HbaseTest",System.getenv("SPARK_HOME"),new Seq[])
-
-  //  getHbaseConf(sparkConf)
 
   def getHbaseConf() = {
-    //    val sc = new SparkContext(sparkConf)
     val conf = HBaseConfiguration.create()
     conf.set("hbase.zookeeper.property.clientPort", "2181")
     conf.set("hbase.zookeeper.quorum", "hadoop-server02,hadoop-server03")
     conf.addResource("/usr/local/hbase-site.xml")
     conf
-  }
-
-
-  def main(args: Array[String]) {
-    //   if(this.rowKeyIsExist(true,"1","1","1","1")) 0 else this.write2Hbase(true,"1","1","1","1")
   }
 
   /**
@@ -46,7 +37,6 @@ object DSHbaseUtils extends Serializable {
     val result = table.get(get)
     var isExist: Boolean = true
     if (result.size() == 0) isExist = false
-
     isExist
   }
 
@@ -73,7 +63,6 @@ object DSHbaseUtils extends Serializable {
   /**
    * 新增曝光受众和新增点击受众的 rowkey
    */
-
   def genAudienceKey(isClick: Boolean, AdvertisersID: String, ADOrderID: String, ADCreativeID: String, uuid: String): String = {
     if (isClick) "ASS" + "Click" + AdvertisersID + ADOrderID + ADCreativeID + uuid
     else "ASS" + AdvertisersID + ADOrderID + ADCreativeID + uuid
