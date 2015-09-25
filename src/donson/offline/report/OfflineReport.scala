@@ -1,20 +1,19 @@
 package donson.offline.report
 
 import java.net.URI
-import java.util.Properties
 
 import com.mongodb.hadoop.MongoOutputFormat
 import donson.common.{ReportUtils, SetApplicationLoggerLevel}
-import donson.common.{ReportUtils, SetApplicationLoggerLevel}
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{Path, FileSystem}
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.log4j.Level
-import org.apache.spark.sql.{Row, SaveMode, SQLContext}
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.sql.SQLContext
+import org.apache.spark.{SparkConf, SparkContext}
 import org.bson.BasicBSONObject
 
 /**
- * Created by Jiawei on 15/9/15.
+ * Created by lomark on 15/9/15.
+ * 离线处理hadoop集群上的文件，处理完成后将文件修改为xxxx.done
  */
 object OfflineReport {
 
@@ -50,12 +49,11 @@ object OfflineReport {
           val adInfoTable = sqlContext.createDataFrame(adInfoRdd, schemaInfo) // 数据和schema信息转化成DataFrame
 
           adInfoTable.registerTempTable("adloginfo")
-//          sqlContext.cacheTable("adloginfo")
+          sqlContext.cacheTable("adloginfo")
 
+          // 报表 DSP_AssHourlyDetailDataReport 示例
           val results = sqlContext.sql(ReportUtils.DSP_AssHourlyDetailDataReport)
-
           val saveRDD  = results.map( rdata => {
-
             val bson = new BasicBSONObject()
             bson.put("AdvertisersID", rdata.getAs[String]("AdvertisersID"))
             bson.put("ADOrderID", rdata.getAs[String]("ADOrderID"))
@@ -72,11 +70,15 @@ object OfflineReport {
             bson.put("IndependentAudienceclickAudienceSum", rdata.getAs[String]("IndependentAudienceclickAudienceSum"))
             (null, bson)
           })
-
-
+          // file:///bogus无实际意义
           saveRDD.saveAsNewAPIHadoopFile("file:///bogus", classOf[Any], classOf[Any], classOf[MongoOutputFormat[Any, Any]], mongoConf)
+          fs.rename(filePath, new Path(filePath.toString.concat(".done")))
 
-//          fs.rename(filePath, new Path(filePath.toString.concat(".done")))
+          /**
+           * other report code
+           */
+
+          sqlContext.uncacheTable("adloginfo")
         }
     }
 
